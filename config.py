@@ -10,7 +10,31 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'stylesphere-dev-secret-key-fashion-2026')
     
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f"sqlite:///{os.path.join(basedir, 'stylesphere.db')}")
+    _raw_db_url = os.getenv('DATABASE_URL')
+    if _raw_db_url:
+        if _raw_db_url.startswith('postgres://'):
+            _raw_db_url = _raw_db_url.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = _raw_db_url
+    elif os.getenv('VERCEL'):
+        # On Vercel serverless, root filesystem is read-only. Copy SQLite db to /tmp.
+        _tmp_db = '/tmp/stylesphere.db'
+        _src_db = os.path.join(basedir, 'instance', 'stylesphere.db')
+        if not os.path.exists(_src_db):
+            _src_db = os.path.join(basedir, 'stylesphere.db')
+        if not os.path.exists(_tmp_db) and os.path.exists(_src_db):
+            try:
+                import shutil
+                shutil.copyfile(_src_db, _tmp_db)
+            except Exception as _e:
+                pass
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{_tmp_db}"
+    else:
+        _instance_db = os.path.join(basedir, 'instance', 'stylesphere.db')
+        if os.path.exists(_instance_db):
+            SQLALCHEMY_DATABASE_URI = f"sqlite:///{_instance_db}"
+        else:
+            SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'stylesphere.db')}"
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_recycle': 280,
