@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StyleSphere — Luxury & Contemporary Fashion{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- StyleSphere Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- CSRF Token Meta for Fetch Requests -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Promotional Announcement Bar -->
+    <div class="promo-bar text-center py-2">
+        <div class="container d-flex justify-content-between align-items-center">
+            <span class="small d-none d-md-inline text-muted"><i class="bi bi-shield-check me-1"></i> 100% Genuine Designer Fashion</span>
+            <span class="small fw-semibold letter-spacing-1">COMPLIMENTARY SHIPPING ON ORDERS ABOVE ₹999 | USE CODE <strong class="text-white">WELCOME10</strong></span>
+            <span class="small d-none d-md-inline text-muted"><i class="bi bi-arrow-repeat me-1"></i> Easy 15-Day Returns</span>
+        </div>
+    </div>
+
+    <!-- Sticky Main Navigation -->
+    <header class="sticky-top bg-white border-bottom main-header">
+        <nav class="navbar navbar-expand-lg navbar-light py-3">
+            <div class="container">
+                <!-- Mobile Menu Button -->
+                <button class="navbar-toggler border-0 p-0 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav">
+                    <i class="bi bi-list fs-2"></i>
+                </button>
+
+                <!-- Brand Logo -->
+                <a class="navbar-brand text-uppercase brand-logo" href="{{ url_for('products.home') }}">
+                    Style<span>Sphere</span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <div class="collapse navbar-collapse justify-content-center d-none d-lg-flex" id="navbarNav">
+                    <ul class="navbar-nav gap-4 text-uppercase nav-links-custom">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('products.shop') }}">Shop All</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('products.shop_men') }}">Men</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('products.shop_women') }}">Women</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('products.new_arrivals') }}">New Arrivals</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('products.best_sellers') }}">Best Sellers</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Right Action Icons -->
+                <div class="d-flex align-items-center gap-3 header-actions">
+                    <!-- Search Trigger -->
+                    <button class="btn btn-link text-dark p-0" data-bs-toggle="modal" data-bs-target="#searchModal" title="Search catalog">
+                        <i class="bi bi-search fs-5"></i>
+                    </button>
+
+                    <!-- Wishlist Icon -->
+                    <a href="{{ url_for('customer.wishlist') if current_user.is_authenticated else url_for('auth.login', next=url_for('customer.wishlist')) }}" class="btn btn-link text-dark p-0 position-relative" title="Saved Wishlist">
+                        <i class="bi bi-heart fs-5"></i>
+                    </a>
+
+                    <!-- Cart Indicator with Live Badge -->
+                    <a href="{{ url_for('cart.view_cart') }}" class="btn btn-link text-dark p-0 position-relative" title="Shopping Cart">
+                        <i class="bi bi-bag fs-5"></i>
+                        <span id="cart-badge" class="badge rounded-pill bg-dark position-absolute top-0 start-100 translate-middle" style="font-size: 0.65rem; display: none;">0</span>
+                    </a>
+
+                    <!-- Customer Account / Login -->
+                    {% if current_user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-dark btn-sm rounded-pill px-3 dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="d-none d-sm-inline">{{ current_user.display_name }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                {% if current_user.is_admin %}
+                                    <li><a class="dropdown-item fw-bold text-primary" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('customer.profile') }}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('customer.orders') }}"><i class="bi bi-box-seam me-2"></i>My Orders</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('customer.wishlist') }}"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-dark btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-person me-1"></i> Sign In
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title brand-logo" id="mobileNavLabel">Style<span>Sphere</span></h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column justify-content-between p-4">
+            <ul class="list-unstyled d-flex flex-column gap-3 text-uppercase fw-semibold letter-spacing-1">
+                <li><a class="text-decoration-none text-dark" href="{{ url_for('products.shop') }}">Shop All Clothing</a></li>
+                <li><a class="text-decoration-none text-dark" href="{{ url_for('products.shop_men') }}">Men's Collection</a></li>
+                <li><a class="text-decoration-none text-dark" href="{{ url_for('products.shop_women') }}">Women's Collection</a></li>
+                <li><a class="text-decoration-none text-dark" href="{{ url_for('products.new_arrivals') }}">New Arrivals</a></li>
+                <li><a class="text-decoration-none text-dark" href="{{ url_for('products.best_sellers') }}">Best Sellers</a></li>
+                <li class="pt-2 border-top"><a class="text-decoration-none text-muted" href="{{ url_for('products.about') }}">About StyleSphere</a></li>
+                <li><a class="text-decoration-none text-muted" href="{{ url_for('products.contact') }}">Contact & Concierge</a></li>
+            </ul>
+
+            <div class="pt-4 border-top">
+                {% if current_user.is_authenticated %}
+                    <p class="text-muted small mb-2">Signed in as <strong>{{ current_user.display_name }}</strong></p>
+                    <a href="{{ url_for('customer.profile') }}" class="btn btn-outline-dark w-100 mb-2">Account Dashboard</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-light w-100 text-danger">Sign Out</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-dark w-100">Sign In with OTP</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body p-4">
+                    <form action="{{ url_for('products.search') }}" method="GET">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-transparent border-0"><i class="bi bi-search fs-4 text-muted"></i></span>
+                            <input type="text" name="q" class="form-control border-0 shadow-none fs-4" placeholder="Search jackets, shirts, cashmere, dresses..." autofocus>
+                            <button class="btn btn-dark px-4" type="submit">Search</button>
+                        </div>
+                    </form>
+                    <div class="mt-3 pt-3 border-top d-flex gap-2 align-items-center flex-wrap">
+                        <span class="small text-muted me-2">Trending:</span>
+                        <a href="{{ url_for('products.search', q='Wool Blazer') }}" class="badge bg-light text-dark text-decoration-none border p-2">Wool Blazer</a>
+                        <a href="{{ url_for('products.search', q='Slip Dress') }}" class="badge bg-light text-dark text-decoration-none border p-2">Silk Dress</a>
+                        <a href="{{ url_for('products.search', q='Denim') }}" class="badge bg-light text-dark text-decoration-none border p-2">Selvedge Denim</a>
+                        <a href="{{ url_for('products.search', q='Cashmere') }}" class="badge bg-light text-dark text-decoration-none border p-2">Cashmere Knit</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                        <i class="bi {% if category == 'success' %}bi-check-circle-fill{% elif category == 'danger' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2 fs-5"></i>
+                        <div>{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white pt-5 pb-4 mt-5">
+        <div class="container">
+            <div class="row g-4 pb-4 border-bottom border-secondary">
+                <div class="col-lg-4 col-md-6">
+                    <h4 class="brand-logo text-white mb-3">Style<span>Sphere</span></h4>
+                    <p class="text-muted small pe-lg-4">
+                        A curated modern fashion destination creating timeless, sustainable, and meticulously tailored wardrobe essentials. Designed with minimalist aesthetics and uncompromising craftsmanship.
+                    </p>
+                    <div class="d-flex gap-3 social-icons mt-3">
+                        <a href="#" class="text-white text-decoration-none fs-5"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white text-decoration-none fs-5"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white text-decoration-none fs-5"><i class="bi bi-pinterest"></i></a>
+                        <a href="#" class="text-white text-decoration-none fs-5"><i class="bi bi-twitter-x"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6 class="text-uppercase letter-spacing-1 mb-3 small fw-bold">Collections</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 text-muted footer-links">
+                        <li><a href="{{ url_for('products.shop_men') }}" class="text-decoration-none text-muted">Men's Apparel</a></li>
+                        <li><a href="{{ url_for('products.shop_women') }}" class="text-decoration-none text-muted">Women's Apparel</a></li>
+                        <li><a href="{{ url_for('products.new_arrivals') }}" class="text-decoration-none text-muted">New Arrivals</a></li>
+                        <li><a href="{{ url_for('products.best_sellers') }}" class="text-decoration-none text-muted">Best Sellers</a></li>
+                        <li><a href="{{ url_for('products.shop') }}" class="text-decoration-none text-muted">All Clothing</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6 class="text-uppercase letter-spacing-1 mb-3 small fw-bold">Client Care</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 text-muted footer-links">
+                        <li><a href="{{ url_for('products.contact') }}" class="text-decoration-none text-muted">Contact Concierge</a></li>
+                        <li><a href="{{ url_for('customer.orders') }}" class="text-decoration-none text-muted">Track Order</a></li>
+                        <li><a href="{{ url_for('products.returns') }}" class="text-decoration-none text-muted">Returns & Exchanges</a></li>
+                        <li><a href="{{ url_for('products.about') }}" class="text-decoration-none text-muted">About Us</a></li>
+                        <li><a href="{{ url_for('admin.login') }}" class="text-decoration-none text-muted"><i class="bi bi-shield-lock me-1"></i>Admin Portal</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12">
+                    <h6 class="text-uppercase letter-spacing-1 mb-3 small fw-bold">StyleSphere Journal</h6>
+                    <p class="text-muted small">Receive private invitations to seasonal drops, private sales, and sartorial editorials.</p>
+                    <form class="input-group" onsubmit="event.preventDefault(); alert('Thank you for subscribing to StyleSphere Journal.');">
+                        <input type="email" class="form-control bg-transparent border-secondary text-white rounded-start" placeholder="Enter your email" required>
+                        <button class="btn btn-light px-3" type="submit">Subscribe</button>
+                    </form>
+                    <div class="small text-muted mt-2">Safe, secure, and zero spam. Unsubscribe anytime.</div>
+                </div>
+            </div>
+
+            <div class="row pt-4 small text-muted align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    &copy; 2026 StyleSphere Fashion Inc. All rights reserved.
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-2 mt-md-0 d-flex justify-content-center justify-content-md-end gap-3">
+                    <a href="{{ url_for('products.privacy') }}" class="text-muted text-decoration-none">Privacy Policy</a>
+                    <span>&bull;</span>
+                    <a href="{{ url_for('products.terms') }}" class="text-muted text-decoration-none">Terms of Service</a>
+                    <span>&bull;</span>
+                    <a href="{{ url_for('products.returns') }}" class="text-muted text-decoration-none">Refund Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global Cart Count & Heartbeat Script -->
+    <script>
+        // Update Shopping Cart badge
+        function updateCartBadge() {
+            fetch('/cart/api/count')
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('cart-badge');
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+        document.addEventListener('DOMContentLoaded', updateCartBadge);
+
+        // Active customer heartbeat ping every 60 seconds
+        {% if current_user.is_authenticated %}
+        setInterval(function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            fetch('/auth/api/heartbeat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            }).catch(() => {});
+        }, 60000);
+        {% endif %}
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

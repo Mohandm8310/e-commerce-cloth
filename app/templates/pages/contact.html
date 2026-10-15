@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact & Concierge — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <span class="text-uppercase small text-muted letter-spacing-2 fw-semibold d-block text-center mb-2">Concierge & Client Services</span>
+            <h1 class="display-6 fw-bold text-center mb-4">We are at your service.</h1>
+            <p class="text-muted text-center mb-5">Have a question regarding custom sizing, an existing order, or bespoke tailoring? Our sartorial consultants are available 7 days a week.</p>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4 text-center">
+                    <div class="p-3 bg-light rounded h-100">
+                        <i class="bi bi-envelope-open fs-3 text-dark d-block mb-2"></i>
+                        <h5 class="fw-bold fs-6">Email Inquiry</h5>
+                        <p class="small text-muted mb-0">concierge@stylesphere.com<br>Response within 4 hours</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="p-3 bg-light rounded h-100">
+                        <i class="bi bi-telephone fs-3 text-dark d-block mb-2"></i>
+                        <h5 class="fw-bold fs-6">Direct Line</h5>
+                        <p class="small text-muted mb-0">+91 (800) 845-3870<br>10:00 AM – 8:00 PM IST</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="p-3 bg-light rounded h-100">
+                        <i class="bi bi-geo-alt fs-3 text-dark d-block mb-2"></i>
+                        <h5 class="fw-bold fs-6">Flagship Studio</h5>
+                        <p class="small text-muted mb-0">100 Feet Road, Indiranagar<br>Bengaluru, Karnataka 560038</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Message Form -->
+            <div class="card border p-4 p-md-5 rounded shadow-sm">
+                <h3 class="h5 fw-bold mb-3">Send us a message</h3>
+                <form onsubmit="event.preventDefault(); alert('Thank you. Your message has been received by our concierge.'); this.reset();">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Your Name *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Email Address *</label>
+                            <input type="email" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Order Reference (Optional)</label>
+                            <input type="text" class="form-control" placeholder="e.g. SS-2026-XXXX">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Message *</label>
+                            <textarea class="form-control" rows="4" placeholder="How may our stylists assist you?" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-dark px-4 py-2 text-uppercase letter-spacing-1 fw-bold">Transmit Inquiry</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

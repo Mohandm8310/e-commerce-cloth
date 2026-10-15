@@ -1,0 +1,291 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard & Live Analytics — StyleSphere Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Executive Dashboard</h1>
+        <p class="text-muted small mb-0">Real-time revenue, live customer monitoring, and inventory analytics.</p>
+    </div>
+
+    <!-- Date Range Buttons -->
+    <div class="d-flex align-items-center gap-2 mt-3 mt-md-0">
+        <span class="small text-muted text-uppercase fw-semibold">Range:</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-date-range" data-days="7">7 Days</button>
+        <button type="button" class="btn btn-sm btn-dark btn-date-range active" data-days="30">30 Days</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-date-range" data-days="90">90 Days</button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. LIVE CUSTOMER LOGIN MONITORING (Privacy-Conscious Metrics) -->
+<!-- ============================================================ -->
+<div class="monitoring-panel shadow-sm">
+    <div class="d-flex justify-content-between align-items-center pb-3 border-bottom border-secondary border-opacity-50 mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="live-pulse"></span>
+            <h5 class="fw-bold fs-6 mb-0 text-uppercase letter-spacing-1">Live Customer Login Monitoring</h5>
+        </div>
+        <div class="small text-white-50">
+            Updated: <span id="live-timestamp" class="text-white">{{ kpis.timestamp }}</span>
+        </div>
+    </div>
+
+    <div class="row g-3 text-center">
+        <!-- Metric A -->
+        <div class="col-lg col-md-4 col-6">
+            <div class="p-2 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                <div class="text-white-50 small mb-1" style="font-size: 0.72rem;">A. REGISTERED CUSTOMERS</div>
+                <div class="fs-4 fw-bold text-white" id="kpi-total-customers">{{ kpis.total_customers }}</div>
+                <div class="text-white-50" style="font-size: 0.68rem;">Unique customer accounts</div>
+            </div>
+        </div>
+
+        <!-- Metric B -->
+        <div class="col-lg col-md-4 col-6">
+            <div class="p-2 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                <div class="text-white-50 small mb-1" style="font-size: 0.72rem;">B. SUCCESSFUL LOGINS</div>
+                <div class="fs-4 fw-bold text-info" id="kpi-total-logins">{{ kpis.total_successful_logins }}</div>
+                <div class="text-white-50" style="font-size: 0.68rem;">Cumulative verified events</div>
+            </div>
+        </div>
+
+        <!-- Metric C -->
+        <div class="col-lg col-md-4 col-6">
+            <div class="p-2 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                <div class="text-white-50 small mb-1" style="font-size: 0.72rem;">C. CURRENTLY LOGGED IN</div>
+                <div class="fs-4 fw-bold text-success" id="kpi-logged-in-customers">{{ kpis.currently_logged_in_customers }}</div>
+                <div class="text-white-50" style="font-size: 0.68rem;">Distinct customers with session</div>
+            </div>
+        </div>
+
+        <!-- Metric D -->
+        <div class="col-lg col-md-6 col-6">
+            <div class="p-2 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                <div class="text-white-50 small mb-1" style="font-size: 0.72rem;">D. RECENT ACTIVE (5 MIN)</div>
+                <div class="fs-4 fw-bold text-warning" id="kpi-recent-active">{{ kpis.recent_active_customers_5m }}</div>
+                <div class="text-white-50" style="font-size: 0.68rem;">Activity heartbeat within 5m</div>
+            </div>
+        </div>
+
+        <!-- Metric E -->
+        <div class="col-lg col-md-6 col-12">
+            <div class="p-2 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                <div class="text-white-50 small mb-1" style="font-size: 0.72rem;">E. ACTIVE SESSIONS</div>
+                <div class="fs-4 fw-bold text-light" id="kpi-active-sessions">{{ kpis.active_sessions_count }}</div>
+                <div class="text-white-50" style="font-size: 0.68rem;">Total valid device sessions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. REVENUE, ORDERS & INVENTORY KPI CARDS                      -->
+<!-- ============================================================ -->
+<div class="row g-3 mb-4">
+    <!-- Verified Total Revenue -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="kpi-title">Verified Revenue</div>
+                    <div class="kpi-value text-dark" id="kpi-total-revenue">{{ kpis.total_revenue | currency }}</div>
+                    <span class="small text-muted">Today: <strong class="text-success" id="kpi-revenue-today">{{ kpis.revenue_today | currency }}</strong></span>
+                </div>
+                <div class="kpi-icon-box bg-success-subtle text-success">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Orders -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="kpi-title">Total Orders</div>
+                    <div class="kpi-value text-dark" id="kpi-total-orders">{{ kpis.total_orders }}</div>
+                    <span class="small text-muted">Placed today: <strong class="text-dark" id="kpi-orders-today">{{ kpis.orders_today }}</strong></span>
+                </div>
+                <div class="kpi-icon-box bg-primary-subtle text-primary">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paid vs Pending -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="kpi-title">Payment Pipeline</div>
+                    <div class="d-flex gap-2 align-items-baseline">
+                        <span class="fs-4 fw-bold text-success" id="kpi-paid-orders">{{ kpis.paid_orders }}</span>
+                        <span class="small text-muted">Paid</span>
+                        <span class="fs-4 fw-bold text-warning ms-2" id="kpi-pending-orders">{{ kpis.pending_orders }}</span>
+                        <span class="small text-muted">Pending</span>
+                    </div>
+                    <span class="small text-muted">Cancelled: <span id="kpi-cancelled-orders">{{ kpis.cancelled_orders }}</span></span>
+                </div>
+                <div class="kpi-icon-box bg-warning-subtle text-warning">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Health -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="kpi-title">Catalog Inventory</div>
+                    <div class="kpi-value text-dark" id="kpi-available-products">{{ kpis.available_products }}</div>
+                    <div class="small">
+                        <span class="text-warning">Low: <strong id="kpi-low-stock">{{ kpis.low_stock_count }}</strong></span> | 
+                        <span class="text-danger">Out: <strong id="kpi-out-of-stock">{{ kpis.out_of_stock_count }}</strong></span>
+                    </div>
+                </div>
+                <div class="kpi-icon-box bg-secondary-subtle text-dark">
+                    <i class="bi bi-boxes"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. CHART.JS ANALYTICS SUITE                                  -->
+<!-- ============================================================ -->
+<div class="row g-4 mb-4">
+    <!-- Sales & Orders over time -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold fs-6 mb-0">Sales & Order Volume Trend</h5>
+                <span class="badge bg-light text-dark border">Daily Aggregation</span>
+            </div>
+            <div style="height: 320px;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue by Product Category -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold fs-6 mb-3">Revenue by Category</h5>
+            <div style="height: 320px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Selling Products -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold fs-6 mb-3">Top-Selling Garments</h5>
+            <div style="height: 280px;">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Status Distribution -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold fs-6 mb-3">Fulfillment Status Distribution</h5>
+            <div style="height: 280px;">
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Registrations & Login Activity -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="fw-bold fs-6 mb-3">Customer Growth & Logins</h5>
+            <div style="height: 280px;">
+                <canvas id="registrationChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 4. RECENT ORDERS & AUDIT LOG TABLE                           -->
+<!-- ============================================================ -->
+<div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold fs-6 mb-0">Recent Order Activity</h5>
+                <a href="{{ url_for('admin.orders') }}" class="small text-dark fw-bold text-decoration-none">Manage All Orders &rarr;</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Fulfillment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ord in recent_orders %}
+                        <tr>
+                            <td class="fw-bold">#{{ ord.order_number }}</td>
+                            <td>{{ ord.user.display_name }}</td>
+                            <td>{{ ord.total_amount | currency }}</td>
+                            <td>
+                                <span class="badge bg-{{ ord.status_badge_class }} text-uppercase" style="font-size: 0.65rem;">
+                                    {{ ord.fulfillment_status.replace('_', ' ') }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.order_detail', id=ord.id) }}" class="btn btn-outline-dark btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Audit Logs -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold fs-6 mb-0">Administrator Audit Trail</h5>
+                <a href="{{ url_for('admin.audit_logs') }}" class="small text-dark fw-bold text-decoration-none">Logs &rarr;</a>
+            </div>
+            <div class="d-flex flex-column gap-3 small">
+                {% for log in recent_logs %}
+                <div class="border-bottom pb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-dark">{{ log.action }}</strong>
+                        <span class="text-muted" style="font-size: 0.72rem;">{{ log.created_at | date_format('%H:%M:%S') }}</span>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                        {{ log.entity_type }} #{{ log.entity_id or '' }} by {{ log.user.display_name }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
+{% endblock %}

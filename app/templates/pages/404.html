@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center my-5">
+    <h1 class="display-1 fw-bold text-dark mb-2">404</h1>
+    <h2 class="h4 fw-semibold mb-3">Garment or Page Not Found</h2>
+    <p class="text-muted small mb-4">The design you are looking for may have moved or been retired from our seasonal archive.</p>
+    <a href="{{ url_for('products.home') }}" class="btn btn-dark px-4 py-2 text-uppercase letter-spacing-1 fw-bold">Return to StyleSphere</a>
+</div>
+{% endblock %}

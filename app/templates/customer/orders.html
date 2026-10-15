@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">My Orders ({{ orders|length }})</h1>
+            <p class="text-muted small mb-0">Track shipments, view invoices, and request returns.</p>
+        </div>
+        <a href="{{ url_for('products.shop') }}" class="btn btn-outline-dark btn-sm text-uppercase letter-spacing-1">
+            Shop More
+        </a>
+    </div>
+
+    {% if orders %}
+    <div class="d-flex flex-column gap-4">
+        {% for order in orders %}
+        <div class="card border rounded shadow-sm overflow-hidden">
+            <!-- Card Header -->
+            <div class="card-header bg-light py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex gap-4 flex-wrap small">
+                    <div>
+                        <span class="text-muted text-uppercase" style="font-size: 0.75rem;">Order Number</span>
+                        <div class="fw-bold text-dark">#{{ order.order_number }}</div>
+                    </div>
+                    <div>
+                        <span class="text-muted text-uppercase" style="font-size: 0.75rem;">Date Placed</span>
+                        <div class="fw-semibold">{{ order.created_at | date_format('%b %d, %Y') }}</div>
+                    </div>
+                    <div>
+                        <span class="text-muted text-uppercase" style="font-size: 0.75rem;">Total Amount</span>
+                        <div class="fw-bold text-dark">{{ order.total_amount | currency }}</div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-{{ order.status_badge_class }} text-uppercase px-3 py-2" style="font-size: 0.75rem;">
+                        {{ order.fulfillment_status.replace('_', ' ') }}
+                    </span>
+                    <a href="{{ url_for('customer.track_order', order_number=order.order_number) }}" class="btn btn-dark btn-sm px-3">
+                        <i class="bi bi-geo-alt me-1"></i> Track
+                    </a>
+                </div>
+            </div>
+
+            <!-- Items Body -->
+            <div class="card-body p-4">
+                <div class="d-flex flex-column gap-3">
+                    {% for item in order.items %}
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if item.product and item.product.primary_image_url %}
+                                <img src="{{ item.product.primary_image_url }}" alt="{{ item.product_name }}" class="rounded" style="width: 60px; height: 75px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary-subtle rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 75px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h5 class="fw-semibold fs-6 mb-1">{{ item.product_name }}</h5>
+                                <div class="text-muted small">
+                                    Size: <strong>{{ item.size }}</strong> | Color: {{ item.color }} | Qty: {{ item.quantity }}
+                                </div>
+                                <div class="text-muted small">SKU: {{ item.sku }}</div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold">{{ item.subtotal | currency }}</span>
+                            <div class="text-muted small">{{ item.unit_price | currency }} each</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 my-5">
+        <i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i>
+        <h3 class="h4 fw-bold">No orders placed yet</h3>
+        <p class="text-muted small mb-4">When you purchase garments, tracking information and history will be visible here.</p>
+        <a href="{{ url_for('products.shop') }}" class="btn btn-dark px-4 py-2 text-uppercase letter-spacing-1 fw-bold">
+            Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

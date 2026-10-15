@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3 col-md-4">
+            <div class="card border-0 bg-light p-4 rounded">
+                <div class="text-center pb-3 border-bottom mb-3">
+                    <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 fw-bold fs-4" style="width: 60px; height: 60px;">
+                        {{ user.display_name[0] | upper }}
+                    </div>
+                    <h5 class="fw-bold mb-0 fs-6">{{ user.display_name }}</h5>
+                    <span class="text-muted small">{{ user.email or user.mobile_number }}</span>
+                </div>
+
+                <ul class="nav flex-column gap-2 small">
+                    <li class="nav-item">
+                        <a href="{{ url_for('customer.profile') }}" class="nav-link text-dark fw-bold px-0"><i class="bi bi-person me-2"></i>Profile & Addresses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('customer.orders') }}" class="nav-link text-muted px-0"><i class="bi bi-box-seam me-2"></i>Order History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('customer.wishlist') }}" class="nav-link text-muted px-0"><i class="bi bi-heart me-2"></i>Saved Wishlist</a>
+                    </li>
+                    <li class="nav-item pt-2 border-top">
+                        <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger px-0"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Profile Content -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Edit Profile Card -->
+            <div class="card border p-4 rounded mb-4">
+                <h4 class="h5 fw-bold mb-3">Personal Details</h4>
+                <form action="{{ url_for('customer.profile') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ profile.first_name or '' }}" placeholder="First Name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ profile.last_name or '' }}" placeholder="Last Name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Email Address</label>
+                            <input type="email" class="form-control bg-light" value="{{ user.email or 'Not linked' }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Mobile Number</label>
+                            <input type="text" class="form-control bg-light" value="{{ user.mobile_number or 'Not linked' }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Gender Preference</label>
+                            <select name="gender" class="form-select">
+                                <option value="" {% if not profile.gender %}selected{% endif %}>Select...</option>
+                                <option value="female" {% if profile.gender == 'female' %}selected{% endif %}>Female</option>
+                                <option value="male" {% if profile.gender == 'male' %}selected{% endif %}>Male</option>
+                                <option value="non-binary" {% if profile.gender == 'non-binary' %}selected{% endif %}>Non-Binary</option>
+                                <option value="prefer_not_to_say" {% if profile.gender == 'prefer_not_to_say' %}selected{% endif %}>Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-dark btn-sm px-4">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Saved Delivery Addresses -->
+            <div class="card border p-4 rounded mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="h5 fw-bold mb-0">Delivery Addresses</h4>
+                    <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                        <i class="bi bi-plus me-1"></i> Add Address
+                    </button>
+                </div>
+
+                {% if addresses %}
+                <div class="row g-3">
+                    {% for addr in addresses %}
+                    <div class="col-md-6">
+                        <div class="border p-3 rounded position-relative h-100 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-dark text-uppercase" style="font-size: 0.65rem;">{{ addr.address_type }}</span>
+                                {% if addr.is_default %}
+                                    <span class="badge bg-success-subtle text-success small">Default</span>
+                                {% endif %}
+                            </div>
+                            <div class="fw-bold small">{{ addr.full_name }}</div>
+                            <div class="small text-muted">
+                                {{ addr.street_address }}{% if addr.landmark %}, {{ addr.landmark }}{% endif %}<br>
+                                {{ addr.city }}, {{ addr.state }} - {{ addr.postal_code }}<br>
+                                Contact: {{ addr.mobile_number }}
+                            </div>
+                            <div class="mt-3 pt-2 border-top text-end">
+                                <form action="{{ url_for('customer.delete_address', id=addr.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove address?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">No delivery addresses saved yet. Add one for expedited checkout.</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent Orders Snippet -->
+            {% if recent_orders %}
+            <div class="card border p-4 rounded">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="h5 fw-bold mb-0">Recent Orders</h4>
+                    <a href="{{ url_for('customer.orders') }}" class="small text-dark fw-bold text-decoration-none">View All Orders &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle small mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ord in recent_orders %}
+                            <tr>
+                                <td class="fw-bold">#{{ ord.order_number }}</td>
+                                <td>{{ ord.created_at | date_format }}</td>
+                                <td>{{ ord.total_amount | currency }}</td>
+                                <td>
+                                    <span class="badge bg-{{ ord.status_badge_class }} text-uppercase" style="font-size: 0.65rem;">
+                                        {{ ord.fulfillment_status.replace('_', ' ') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('customer.track_order', order_number=ord.order_number) }}" class="btn btn-outline-dark btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                                        Track
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">Add New Delivery Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('customer.add_address') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small">Recipient Full Name *</label>
+                            <input type="text" name="full_name" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Mobile Number *</label>
+                            <input type="tel" name="mobile_number" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Street Address / Apartment *</label>
+                            <input type="text" name="street_address" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Landmark (Optional)</label>
+                            <input type="text" name="landmark" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">City *</label>
+                            <input type="text" name="city" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">State *</label>
+                            <input type="text" name="state" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">PIN Code *</label>
+                            <input type="text" name="postal_code" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Address Type</label>
+                            <select name="address_type" class="form-select">
+                                <option value="home">Home</option>
+                                <option value="work">Work / Office</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_default" value="1" id="defaultAddrCheck" checked>
+                                <label class="form-check-label small" for="defaultAddrCheck">Set as default delivery address</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark btn-sm px-4">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Order Fulfillment — StyleSphere Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Customer Orders & Fulfillment</h1>
+        <p class="text-muted small mb-0">Manage delivery workflows, update order transitions, and assign tracking numbers.</p>
+    </div>
+</div>
+
+<!-- Search & Status Filter -->
+<div class="card border-0 shadow-sm p-3 mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" class="form-control" placeholder="Search by Order # (e.g. SS-2026...)" value="{{ search }}">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Fulfillment Statuses</option>
+                <option value="pending_payment" {% if selected_status == 'pending_payment' %}selected{% endif %}>Pending Payment</option>
+                <option value="paid" {% if selected_status == 'paid' %}selected{% endif %}>Paid</option>
+                <option value="confirmed" {% if selected_status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="processing" {% if selected_status == 'processing' %}selected{% endif %}>Processing</option>
+                <option value="shipped" {% if selected_status == 'shipped' %}selected{% endif %}>Shipped</option>
+                <option value="delivered" {% if selected_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                <option value="refunded" {% if selected_status == 'refunded' %}selected{% endif %}>Refunded</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-dark btn-sm w-100">Filter</button>
+            <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Orders Table -->
+<div class="card border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="table-light small text-uppercase letter-spacing-1">
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Date Placed</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Fulfillment</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ord in orders %}
+                <tr>
+                    <td class="fw-bold">
+                        <a href="{{ url_for('admin.order_detail', id=ord.id) }}" class="text-decoration-none text-dark">
+                            #{{ ord.order_number }}
+                        </a>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ ord.user.display_name }}</div>
+                        <div class="text-muted small">{{ ord.user.email or ord.user.mobile_number }}</div>
+                    </td>
+                    <td>
+                        <span class="small">{{ ord.created_at | date_format('%b %d, %Y, %I:%M %p') }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ ord.items|length }} garment(s)</span>
+                    </td>
+                    <td>
+                        <span class="fw-bold">{{ ord.total_amount | currency }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{% if ord.payment_status == 'paid' %}success{% elif ord.payment_status == 'failed' %}danger{% else %}warning{% endif %} text-uppercase" style="font-size: 0.68rem;">
+                            {{ ord.payment_status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ ord.status_badge_class }} text-uppercase" style="font-size: 0.68rem;">
+                            {{ ord.fulfillment_status.replace('_', ' ') }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.order_detail', id=ord.id) }}" class="btn btn-outline-dark btn-sm">
+                            Manage Order &rarr;
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
+                        No customer orders found matching the filter criteria.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('products.home') }}" class="text-muted text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products.shop') }}" class="text-muted text-decoration-none">Shop</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products.shop', category=product.category.slug) }}" class="text-muted text-decoration-none">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-5">
+        <!-- Image Gallery -->
+        <div class="col-lg-7">
+            <div class="row g-3">
+                <!-- Main Image Preview -->
+                <div class="col-12">
+                    <div class="product-detail-main-img rounded overflow-hidden bg-light" style="aspect-ratio: 3/4;">
+                        <img id="mainProductImg" src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="w-100 h-100 object-fit-cover shadow-sm">
+                    </div>
+                </div>
+
+                <!-- Thumbnails (if multiple) -->
+                {% if product.images|length > 1 %}
+                <div class="col-12 d-flex gap-2">
+                    {% for img in product.images %}
+                    <div class="thumbnail-item border rounded p-1 cursor-pointer" style="width: 75px; height: 95px; cursor: pointer;" onclick="document.getElementById('mainProductImg').src='{{ img.image_url }}';">
+                        <img src="{{ img.image_url }}" alt="{{ product.name }}" class="w-100 h-100 object-fit-cover">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Actions & Information -->
+        <div class="col-lg-5">
+            <div class="product-info-sticky">
+                <span class="text-uppercase small text-muted letter-spacing-2 fw-semibold">{{ product.brand }}</span>
+                <h1 class="h2 fw-bold text-dark mt-1 mb-2">{{ product.name }}</h1>
+                <div class="text-muted small mb-3">SKU: <span id="displaySku">{{ product.sku }}</span></div>
+
+                <!-- Pricing -->
+                <div class="d-flex align-items-baseline gap-3 mb-4 pb-3 border-bottom">
+                    <span class="fs-3 fw-bold text-dark" id="displayPrice">{{ product.effective_price | currency }}</span>
+                    {% if product.discount_price and product.discount_price < product.price %}
+                        <span class="fs-5 text-muted text-decoration-line-through">{{ product.price | currency }}</span>
+                        <span class="badge bg-danger text-uppercase px-2 py-1" style="font-size: 0.75rem;">{{ product.discount_percent }}% OFF</span>
+                    {% endif %}
+                </div>
+
+                <!-- Add to Bag Form -->
+                <form id="addToCartForm" action="{{ url_for('cart.add_to_cart') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="variant_id" id="selectedVariantId" value="">
+
+                    <!-- Color Selection -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold text-uppercase letter-spacing-1">Color: <span id="selectedColorName" class="text-muted fw-normal">Select a color</span></span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2" id="colorOptions">
+                            {% for c in product.available_colors %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-color-pill px-3" data-color="{{ c }}">
+                                {{ c }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-bold text-uppercase letter-spacing-1">Size: <span id="selectedSizeName" class="text-muted fw-normal">Select a size</span></span>
+                            <a href="#sizeGuideModal" data-bs-toggle="modal" class="small text-muted text-decoration-none"><i class="bi bi-rulers me-1"></i>Size Guide</a>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2" id="sizeOptions">
+                            {% for s in product.available_sizes %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-size-pill" style="min-width: 48px;" data-size="{{ s }}">
+                                {{ s }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Stock Indicator Badge -->
+                    <div class="mb-4" id="stockStatusWrapper">
+                        <span id="stockBadge" class="badge bg-light text-dark border px-3 py-2 small">
+                            <i class="bi bi-info-circle me-1"></i> Please select size and color to check stock
+                        </span>
+                    </div>
+
+                    <!-- Quantity & Buttons -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div style="width: 100px;">
+                            <label class="small text-muted mb-1 text-uppercase">Qty</label>
+                            <input type="number" name="quantity" id="quantityInput" class="form-control text-center fw-bold" value="1" min="1" max="10">
+                        </div>
+                        <div class="flex-grow-1 d-flex align-items-end">
+                            <button type="submit" id="addToCartBtn" class="btn btn-dark w-100 py-2 text-uppercase letter-spacing-1 fw-bold" disabled>
+                                Add to Shopping Bag
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-dark py-2 px-3 btn-wishlist-toggle" data-product-id="{{ product.id }}" title="Wishlist">
+                                <i class="bi {% if in_wishlist %}bi-heart-fill text-danger{% else %}bi-heart{% endif %} fs-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Product Details Accordion -->
+                <div class="accordion accordion-flush border-top" id="productAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-uppercase small letter-spacing-1" type="button" data-bs-toggle="collapse" data-bs-target="#descCollapse">
+                                Description & Craftsmanship
+                            </button>
+                        </h2>
+                        <div id="descCollapse" class="accordion-collapse collapse show">
+                            <div class="accordion-body small text-muted">
+                                {{ product.description }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold text-uppercase small letter-spacing-1" type="button" data-bs-toggle="collapse" data-bs-target="#deliveryCollapse">
+                                Delivery & 15-Day Returns
+                            </button>
+                        </h2>
+                        <div id="deliveryCollapse" class="accordion-collapse collapse">
+                            <div class="accordion-body small text-muted">
+                                <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                                    <li><i class="bi bi-check2 text-success me-2"></i>Express delivery in 2-4 business days across India.</li>
+                                    <li><i class="bi bi-check2 text-success me-2"></i>Free standard shipping on orders over ₹999.</li>
+                                    <li><i class="bi bi-check2 text-success me-2"></i>Hassle-free 15-day return and exchange policy.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-5 pt-5 border-top">
+        <h3 class="h4 fw-bold mb-4 text-center">Complete the Look</h3>
+        <div class="row g-4">
+            {% for rel in related_products %}
+            <div class="col-lg-3 col-6">
+                <div class="product-card">
+                    <div class="product-image-wrapper">
+                        <a href="{{ url_for('products.product_detail', identifier=rel.slug) }}">
+                            <img src="{{ rel.primary_image_url }}" alt="{{ rel.name }}">
+                        </a>
+                    </div>
+                    <div class="pt-3">
+                        <h4 class="product-title">
+                            <a href="{{ url_for('products.product_detail', identifier=rel.slug) }}" class="text-decoration-none text-dark">{{ rel.name }}</a>
+                        </h4>
+                        <span class="product-price">{{ rel.effective_price | currency }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Size Guide Modal -->
+<div class="modal fade" id="sizeGuideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">Size & Fit Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <table class="table table-bordered small text-center align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Size</th>
+                            <th>Chest (in)</th>
+                            <th>Waist (in)</th>
+                            <th>Hips (in)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>XS</td><td>34 - 36</td><td>28 - 30</td><td>34 - 36</td></tr>
+                        <tr><td>S</td><td>36 - 38</td><td>30 - 32</td><td>36 - 38</td></tr>
+                        <tr><td>M</td><td>38 - 40</td><td>32 - 34</td><td>38 - 40</td></tr>
+                        <tr><td>L</td><td>40 - 42</td><td>34 - 36</td><td>40 - 42</td></tr>
+                        <tr><td>XL</td><td>42 - 44</td><td>36 - 38</td><td>42 - 44</td></tr>
+                        <tr><td>XXL</td><td>44 - 46</td><td>38 - 40</td><td>44 - 46</td></tr>
+                    </tbody>
+                </table>
+                <p class="small text-muted mb-0">Measurements refer to body dimensions, not garment size. Fits true to standard international sizing.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+    // Variants database from backend
+    const variants = {{ variants_data | tojson }};
+    let selectedSize = null;
+    let selectedColor = null;
+
+    const sizeBtns = document.querySelectorAll('.btn-size-pill');
+    const colorBtns = document.querySelectorAll('.btn-color-pill');
+    const addBtn = document.getElementById('addToCartBtn');
+    const stockBadge = document.getElementById('stockBadge');
+    const variantIdInput = document.getElementById('selectedVariantId');
+    const skuDisplay = document.getElementById('displaySku');
+
+    // Auto-select first color/size if available
+    if (colorBtns.length > 0) {
+        selectColor(colorBtns[0].dataset.color);
+    }
+    if (sizeBtns.length > 0) {
+        selectSize(sizeBtns[0].dataset.size);
+    }
+
+    sizeBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            selectSize(this.dataset.size);
+        });
+    });
+
+    colorBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            selectColor(this.dataset.color);
+        });
+    });
+
+    function selectSize(sz) {
+        selectedSize = sz;
+        sizeBtns.forEach(b => {
+            if (b.dataset.size === sz) {
+                b.classList.remove('btn-outline-secondary');
+                b.classList.add('btn-dark');
+            } else {
+                b.classList.remove('btn-dark');
+                b.classList.add('btn-outline-secondary');
+            }
+        });
+        document.getElementById('selectedSizeName').textContent = sz;
+        evaluateVariant();
+    }
+
+    function selectColor(cl) {
+        selectedColor = cl;
+        colorBtns.forEach(b => {
+            if (b.dataset.color === cl) {
+                b.classList.remove('btn-outline-secondary');
+                b.classList.add('btn-dark');
+            } else {
+                b.classList.remove('btn-dark');
+                b.classList.add('btn-outline-secondary');
+            }
+        });
+        document.getElementById('selectedColorName').textContent = cl;
+        evaluateVariant();
+    }
+
+    function evaluateVariant() {
+        if (!selectedSize || !selectedColor) return;
+
+        const matched = variants.find(v => v.size === selectedSize && v.color === selectedColor);
+        if (matched) {
+            variantIdInput.value = matched.id;
+            skuDisplay.textContent = matched.sku;
+
+            if (matched.stock > 5) {
+                stockBadge.className = 'badge bg-success-subtle text-success border border-success-subtle px-3 py-2 small';
+                stockBadge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> In Stock (${matched.stock} units available)`;
+                addBtn.disabled = false;
+                addBtn.textContent = 'Add to Shopping Bag';
+            } else if (matched.stock > 0) {
+                stockBadge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 small';
+                stockBadge.innerHTML = `<i class="bi bi-clock-history me-1"></i> Hurry! Only ${matched.stock} left in stock`;
+                addBtn.disabled = false;
+                addBtn.textContent = 'Add to Shopping Bag';
+            } else {
+                stockBadge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 small';
+                stockBadge.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> Currently Out of Stock`;
+                addBtn.disabled = true;
+                addBtn.textContent = 'Out of Stock';
+            }
+        } else {
+            variantIdInput.value = '';
+            stockBadge.className = 'badge bg-secondary-subtle text-secondary px-3 py-2 small';
+            stockBadge.innerHTML = `<i class="bi bi-dash-circle me-1"></i> This size & color combination is unavailable`;
+            addBtn.disabled = true;
+            addBtn.textContent = 'Unavailable';
+        }
+    }
+</script>
+{% endblock %}

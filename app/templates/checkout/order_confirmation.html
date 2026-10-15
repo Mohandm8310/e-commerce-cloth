@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="mx-auto" style="max-width: 650px;">
+        <div class="mb-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+        <span class="badge bg-success-subtle text-success text-uppercase letter-spacing-1 px-3 py-2 mb-2">Payment Verified</span>
+        <h1 class="display-6 fw-bold mb-2">Thank you for your order!</h1>
+        <p class="text-muted">Your order number is <strong class="text-dark">#{{ order.order_number }}</strong>. A confirmation and tracking receipt have been dispatched.</p>
+
+        <!-- Order Summary Card -->
+        <div class="card border p-4 text-start bg-light rounded mt-4">
+            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                <div>
+                    <span class="small text-muted text-uppercase">Status</span>
+                    <div class="fw-bold text-uppercase">{{ order.fulfillment_status.replace('_', ' ') }}</div>
+                </div>
+                <div>
+                    <span class="small text-muted text-uppercase">Placed On</span>
+                    <div class="fw-bold">{{ order.created_at | date_format('%b %d, %Y, %I:%M %p') }}</div>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="mb-3">
+                <span class="small text-muted text-uppercase fw-bold letter-spacing-1">Shipping To</span>
+                {% if order.shipping_address_snapshot %}
+                <div class="small text-dark mt-1">
+                    <strong>{{ order.shipping_address_snapshot.get('full_name') }}</strong><br>
+                    {{ order.shipping_address_snapshot.get('street_address') }}<br>
+                    {{ order.shipping_address_snapshot.get('city') }}, {{ order.shipping_address_snapshot.get('state') }} - {{ order.shipping_address_snapshot.get('postal_code') }}<br>
+                    Mobile: {{ order.shipping_address_snapshot.get('mobile_number') }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Ordered Items -->
+            <div class="border-top pt-3 mb-3">
+                <span class="small text-muted text-uppercase fw-bold letter-spacing-1">Items in this Package</span>
+                <div class="d-flex flex-column gap-2 mt-2">
+                    {% for item in order.items %}
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <div>
+                            <strong>{{ item.product_name }}</strong> &times; {{ item.quantity }}
+                            <div class="text-muted" style="font-size: 0.75rem;">Size: {{ item.size }} | Color: {{ item.color }} | SKU: {{ item.sku }}</div>
+                        </div>
+                        <span class="fw-bold">{{ item.subtotal | currency }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Financials -->
+            <div class="border-top pt-3 d-flex flex-column gap-1 small text-muted">
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal</span>
+                    <span>{{ order.subtotal | currency }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                <div class="d-flex justify-content-between text-success">
+                    <span>Coupon Discount</span>
+                    <span>-{{ order.discount_amount | currency }}</span>
+                </div>
+                {% endif %}
+                <div class="d-flex justify-content-between">
+                    <span>Shipping Fee</span>
+                    <span>{% if order.shipping_fee == 0 %}FREE{% else %}{{ order.shipping_fee | currency }}{% endif %}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Taxes (5% GST)</span>
+                    <span>{{ order.tax_amount | currency }}</span>
+                </div>
+                <div class="d-flex justify-content-between border-top pt-2 mt-1 fw-bold fs-6 text-dark">
+                    <span>Total Paid</span>
+                    <span>{{ order.total_amount | currency }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{{ url_for('customer.track_order', order_number=order.order_number) }}" class="btn btn-dark px-4 py-2 text-uppercase letter-spacing-1 fw-bold">
+                <i class="bi bi-geo-alt me-1"></i> Track Order
+            </a>
+            <a href="{{ url_for('products.shop') }}" class="btn btn-outline-dark px-4 py-2 text-uppercase letter-spacing-1">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

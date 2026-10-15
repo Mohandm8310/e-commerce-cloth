@@ -1,0 +1,180 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{% if product %}Edit {{ product.name }}{% else %}Add New Garment{% endif %} — StyleSphere Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-1">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.products') }}" class="text-muted text-decoration-none">Products</a></li>
+                <li class="breadcrumb-item active">{% if product %}Edit Product #{{ product.id }}{% else %}Create New{% endif %}</li>
+            </ol>
+        </nav>
+        <h1 class="h3 fw-bold mb-0">{% if product %}Edit Garment: {{ product.name }}{% else %}Add New Designer Garment{% endif %}</h1>
+    </div>
+    <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Products
+    </a>
+</div>
+
+<form method="POST" enctype="multipart/form-data" class="card border-0 shadow-sm p-4 p-md-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="row g-4">
+        <!-- Basic Information -->
+        <div class="col-lg-8">
+            <h5 class="fw-bold fs-6 mb-3 border-bottom pb-2">1. General Information</h5>
+            
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Garment Title *</label>
+                <input type="text" name="name" class="form-control" value="{{ product.name if product else '' }}" placeholder="e.g. Italian Wool Double-Breasted Blazer" required>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Category *</label>
+                    <select name="category_id" class="form-select" required>
+                        <option value="">Select Category...</option>
+                        {% for c in categories %}
+                        <option value="{{ c.id }}" {% if product and product.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Brand / Label *</label>
+                    <input type="text" name="brand" class="form-control" value="{{ product.brand if product else 'StyleSphere Atelier' }}" required>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Base Price (₹) *</label>
+                    <input type="number" step="0.01" name="price" class="form-control" value="{{ product.price if product else '' }}" placeholder="e.g. 4999.00" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold">Discount Price (₹, Optional)</label>
+                    <input type="number" step="0.01" name="discount_price" class="form-control" value="{{ product.discount_price if product and product.discount_price else '' }}" placeholder="e.g. 3999.00">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">SKU Identifier</label>
+                <input type="text" name="sku" class="form-control" value="{{ product.sku if product else '' }}" placeholder="Auto-generated if left blank">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Product Description & Care</label>
+                <textarea name="description" class="form-control" rows="5" placeholder="Fabric composition, silhouette, cut, and care instructions...">{{ product.description if product else '' }}</textarea>
+            </div>
+
+            <!-- Variant Matrix Section -->
+            <h5 class="fw-bold fs-6 mb-3 border-bottom pb-2">2. Inventory & Variant Matrix</h5>
+
+            {% if product %}
+                <!-- Existing Variants Stock Update -->
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Variant SKU</th>
+                                <th>Size</th>
+                                <th>Color</th>
+                                <th style="width: 140px;">Stock Units</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in product.variants %}
+                            <tr>
+                                <td><code>{{ v.sku }}</code></td>
+                                <td><span class="badge bg-dark">{{ v.size }}</span></td>
+                                <td>{{ v.color }}</td>
+                                <td>
+                                    <input type="number" name="stock_{{ v.id }}" class="form-control form-control-sm text-center fw-bold" value="{{ v.stock_quantity }}" min="0">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Create Initial Variants -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Select Available Sizes</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for sz in ['XS', 'S', 'M', 'L', 'XL', 'XXL'] %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="sizes" value="{{ sz }}" id="sz_{{ sz }}" {% if sz in ['S', 'M', 'L'] %}checked{% endif %}>
+                            <label class="form-check-label small" for="sz_{{ sz }}">{{ sz }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Select Colorways</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for col in ['Black', 'White', 'Beige', 'Navy Blue', 'Muted Olive', 'Camel'] %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="colors" value="{{ col }}" id="col_{{ loop.index }}" {% if loop.index <= 2 %}checked{% endif %}>
+                            <label class="form-check-label small" for="col_{{ loop.index }}">{{ col }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3" style="max-width: 250px;">
+                    <label class="form-label small fw-bold">Initial Stock per Variant Combination</label>
+                    <input type="number" name="initial_stock" class="form-control" value="10" min="0">
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Options: Imagery & Status -->
+        <div class="col-lg-4">
+            <h5 class="fw-bold fs-6 mb-3 border-bottom pb-2">3. Media & Visibility</h5>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Primary Image URL (Unsplash or CDN)</label>
+                <input type="url" name="image_url" class="form-control" value="{{ product.primary_image_url if product else '' }}" placeholder="https://images.unsplash.com/...">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Or Upload Local Image File</label>
+                <input type="file" name="image_file" class="form-control" accept="image/*">
+                <div class="form-text small">Supports PNG, JPG, JPEG, WEBP.</div>
+            </div>
+
+            {% if product and product.primary_image_url %}
+            <div class="mb-4">
+                <label class="form-label small text-muted">Current Primary Photo</label>
+                <div class="rounded overflow-hidden border p-1" style="height: 220px;">
+                    <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="w-100 h-100 object-fit-cover">
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card p-3 bg-light border mb-4">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="is_featured" id="featuredCheck" {% if product and product.is_featured %}checked{% endif %}>
+                    <label class="form-check-label small fw-bold" for="featuredCheck">
+                        Feature on Homepage Carousel
+                    </label>
+                </div>
+                {% if product %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="activeCheck" {% if product.is_active %}checked{% endif %}>
+                    <label class="form-check-label small fw-bold" for="activeCheck">
+                        Product is Active for Sale
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100 py-2 text-uppercase fw-bold letter-spacing-1">
+                {% if product %}Save Changes{% else %}Publish Garment{% endif %}
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-5">
+        <!-- Checkout Left Column: Address & Payment Selection -->
+        <div class="col-lg-7">
+            <h2 class="h4 fw-bold mb-4">1. Delivery Address</h2>
+
+            <!-- Existing Addresses -->
+            {% if addresses %}
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-uppercase letter-spacing-1 text-muted">Select Saved Address</label>
+                <div class="row g-3">
+                    {% for addr in addresses %}
+                    <div class="col-md-6">
+                        <div class="card p-3 h-100 border address-card {% if addr.is_default %}border-dark bg-light{% endif %}" style="cursor: pointer;" onclick="selectAddress({{ addr.id }})">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="selected_address_id" id="addr_{{ addr.id }}" value="{{ addr.id }}" {% if addr.is_default or loop.first %}checked{% endif %}>
+                                <label class="form-check-label fw-bold small" for="addr_{{ addr.id }}">
+                                    {{ addr.full_name }}
+                                    <span class="badge bg-secondary-subtle text-secondary ms-1 text-uppercase" style="font-size: 0.65rem;">{{ addr.address_type }}</span>
+                                </label>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                {{ addr.street_address }}{% if addr.landmark %}, {{ addr.landmark }}{% endif %}<br>
+                                {{ addr.city }}, {{ addr.state }} - {{ addr.postal_code }}<br>
+                                Mobile: {{ addr.mobile_number }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="text-center my-3">
+                <button class="btn btn-link text-dark btn-sm text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#newAddressCollapse">
+                    <i class="bi bi-plus-circle me-1"></i> Or Add a New Delivery Address
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- New Address Form (Collapsed if saved exist) -->
+            <div class="collapse {% if not addresses %}show{% endif %} card p-4 border bg-light mb-4" id="newAddressCollapse">
+                <h5 class="fw-bold mb-3 fs-6">New Shipping Details</h5>
+                <div class="row g-3" id="newAddressFormFields">
+                    <div class="col-md-6">
+                        <label class="form-label small">Recipient Full Name *</label>
+                        <input type="text" id="new_full_name" class="form-control" placeholder="e.g. Ananya Sharma">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Mobile Number (for delivery) *</label>
+                        <input type="tel" id="new_mobile_number" class="form-control" placeholder="10-digit mobile number">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small">Flat / House No. / Street Address *</label>
+                        <input type="text" id="new_street_address" class="form-control" placeholder="Apartment, Studio, Street name">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Landmark (Optional)</label>
+                        <input type="text" id="new_landmark" class="form-control" placeholder="Nearby Metro, Park, etc.">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">City *</label>
+                        <input type="text" id="new_city" class="form-control" placeholder="City">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">State *</label>
+                        <input type="text" id="new_state" class="form-control" placeholder="State">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">PIN Code *</label>
+                        <input type="text" id="new_postal_code" class="form-control" placeholder="6-digit PIN code">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <h2 class="h4 fw-bold mt-5 mb-4">2. Secure Payment Gateway</h2>
+            <div class="card p-4 border bg-light">
+                <div class="form-check d-flex align-items-center justify-content-between">
+                    <div>
+                        <input class="form-check-input" type="radio" name="payment_method" id="payRazorpay" value="razorpay" checked>
+                        <label class="form-check-label fw-bold ms-2" for="payRazorpay">
+                            Razorpay Online Checkout
+                        </label>
+                        <div class="text-muted small ms-2">Pay securely via UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, Netbanking.</div>
+                    </div>
+                    <span class="badge bg-primary text-uppercase px-2 py-1">Instant Verification</span>
+                </div>
+
+                {% if mock_mode %}
+                <div class="alert alert-info mt-3 mb-0 small">
+                    <i class="bi bi-info-circle me-1"></i> <strong>Developer Test Mode Active:</strong> Razorpay simulation will process test signatures without charging real funds.
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-4">
+                <label class="form-label small text-muted">Delivery Instructions (Optional)</label>
+                <textarea id="orderNotes" class="form-control" rows="2" placeholder="Leave at security desk, call upon arrival, etc."></textarea>
+            </div>
+        </div>
+
+        <!-- Checkout Right Column: Order Review -->
+        <div class="col-lg-5">
+            <div class="card border-0 bg-light p-4 rounded shadow-sm sticky-top" style="top: 100px;">
+                <h3 class="h5 fw-bold mb-3">Order Review</h3>
+
+                <!-- Cart Items Snapshot -->
+                <div class="d-flex flex-column gap-3 mb-4 pb-3 border-bottom" style="max-height: 280px; overflow-y: auto;">
+                    {% for item in cart.items %}
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="{{ item.variant.product.primary_image_url }}" alt="{{ item.variant.product.name }}" class="rounded" style="width: 50px; height: 65px; object-fit: cover;">
+                        <div class="flex-grow-1 small">
+                            <div class="fw-semibold text-truncate" style="max-width: 220px;">{{ item.variant.product.name }}</div>
+                            <div class="text-muted">Size: {{ item.variant.size }} | Qty: {{ item.quantity }}</div>
+                        </div>
+                        <div class="fw-bold small">{{ item.line_total | currency }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Price Breakdown -->
+                <div class="d-flex flex-column gap-2 pb-3 border-bottom small text-muted">
+                    <div class="d-flex justify-content-between">
+                        <span>Bag Subtotal</span>
+                        <span>{{ subtotal | currency }}</span>
+                    </div>
+                    {% if discount_amount > 0 %}
+                    <div class="d-flex justify-content-between text-success">
+                        <span>Coupon Discount ({{ applied_coupon.code }})</span>
+                        <span>-{{ discount_amount | currency }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between">
+                        <span>Shipping Charges</span>
+                        <span>{% if shipping_fee == 0 %}FREE{% else %}{{ shipping_fee | currency }}{% endif %}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>GST / Taxes (5%)</span>
+                        <span>{{ tax_amount | currency }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between pt-3 mb-4">
+                    <span class="fw-bold fs-5">Final Total</span>
+                    <span class="fw-bold fs-4 text-dark" id="displayFinalTotal">{{ final_total | currency }}</span>
+                </div>
+
+                <!-- Place Order & Pay Button -->
+                <button type="button" id="btnPlaceOrder" class="btn btn-dark w-100 py-3 text-uppercase letter-spacing-1 fw-bold">
+                    <i class="bi bi-shield-check me-1"></i> Pay {{ final_total | currency }} with Razorpay
+                </button>
+
+                <div class="text-center mt-3 small text-muted">
+                    By confirming your order, you agree to StyleSphere's Terms & Conditions and 15-day Return Policy.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mock Razorpay Test Modal (For offline/sandbox development) -->
+<div class="modal fade" id="mockRazorpayModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-credit-card-2-front fs-4 text-warning"></i>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">Razorpay Payment Gateway</h5>
+                        <div class="small text-white-50">StyleSphere Test Environment</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="small text-muted mb-1 text-uppercase letter-spacing-1">Order Amount to Authorize</div>
+                <div class="fs-2 fw-bold text-dark mb-3" id="mockModalAmount">₹0.00</div>
+                <p class="small text-muted">Select an outcome below to simulate the official Razorpay payment callback:</p>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="button" class="btn btn-success py-2 fw-bold" onclick="simulatePaymentSuccess()">
+                        <i class="bi bi-check-circle-fill me-1"></i> Simulate Payment Success (UPI / Card)
+                    </button>
+                    <button type="button" class="btn btn-outline-danger py-2" onclick="simulatePaymentFailure()">
+                        <i class="bi bi-x-circle me-1"></i> Simulate Payment Cancelled / Failed
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center bg-light py-2">
+                <span class="small text-muted"><i class="bi bi-lock-fill me-1"></i> Official HMAC-SHA256 signature will be verified server-side.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Official Razorpay Checkout Library -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    let currentServerOrder = null;
+
+    function selectAddress(id) {
+        document.querySelectorAll('.address-card').forEach(c => c.classList.remove('border-dark', 'bg-light'));
+        const radio = document.getElementById(`addr_${id}`);
+        if (radio) {
+            radio.checked = true;
+            radio.closest('.address-card').classList.add('border-dark', 'bg-light');
+        }
+    }
+
+    document.getElementById('btnPlaceOrder').addEventListener('click', function () {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Order...';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Check selected address
+        const selectedRadio = document.querySelector('input[name="selected_address_id"]:checked');
+        const payload = {
+            notes: document.getElementById('orderNotes').value.trim()
+        };
+
+        if (selectedRadio) {
+            payload.address_id = parseInt(selectedRadio.value);
+        } else {
+            // Read from new address inputs
+            payload.full_name = document.getElementById('new_full_name').value.trim();
+            payload.mobile_number = document.getElementById('new_mobile_number').value.trim();
+            payload.street_address = document.getElementById('new_street_address').value.trim();
+            payload.landmark = document.getElementById('new_landmark').value.trim();
+            payload.city = document.getElementById('new_city').value.trim();
+            payload.state = document.getElementById('new_state').value.trim();
+            payload.postal_code = document.getElementById('new_postal_code').value.trim();
+
+            if (!payload.full_name || !payload.mobile_number || !payload.street_address || !payload.city || !payload.postal_code) {
+                alert('Please provide complete delivery address details.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Pay with Razorpay';
+                return;
+            }
+        }
+
+        // 1. Create order on backend
+        fetch('/checkout/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Failed to initialize order.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Pay with Razorpay';
+                return;
+            }
+
+            currentServerOrder = data;
+
+            // Check if mock mode or live key
+            if (data.mock_mode || !data.key_id || data.key_id.includes('test_stylesphere')) {
+                // Open test modal
+                document.getElementById('mockModalAmount').textContent = '₹' + (data.amount / 100).toFixed(2);
+                const modal = new bootstrap.Modal(document.getElementById('mockRazorpayModal'));
+                modal.show();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Pay with Razorpay';
+            } else {
+                // Open official Razorpay modal
+                const options = {
+                    key: data.key_id,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'StyleSphere',
+                    description: 'Fashion Apparel Order #' + data.order_number,
+                    order_id: data.razorpay_order_id,
+                    handler: function (response) {
+                        verifyPaymentOnServer(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
+                    },
+                    prefill: {
+                        name: data.customer_name,
+                        email: data.customer_email,
+                        contact: data.customer_mobile
+                    },
+                    theme: {
+                        color: '#111111'
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Pay with Razorpay';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Network error communicating with order server.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Pay with Razorpay';
+        });
+    });
+
+    function simulatePaymentSuccess() {
+        if (!currentServerOrder) return;
+        const fakePaymentId = 'pay_' + Math.random().toString(36).substring(2, 12);
+        const fakeSignature = 'mock_sig_' + fakePaymentId;
+        verifyPaymentOnServer(currentServerOrder.razorpay_order_id, fakePaymentId, fakeSignature);
+    }
+
+    function simulatePaymentFailure() {
+        alert('Payment was cancelled. You can retry anytime.');
+        bootstrap.Modal.getInstance(document.getElementById('mockRazorpayModal')).hide();
+    }
+
+    function verifyPaymentOnServer(orderId, paymentId, signature) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch('/checkout/verify-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                order_number: currentServerOrder.order_number,
+                razorpay_order_id: orderId,
+                razorpay_payment_id: paymentId,
+                razorpay_signature: signature
+            })
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.success) {
+                window.location.href = resData.redirect_url;
+            } else {
+                alert(resData.message || 'Payment verification failed.');
+            }
+        })
+        .catch(err => console.error(err));
+    }
+</script>
+{% endblock %}

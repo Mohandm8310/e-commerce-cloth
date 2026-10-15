@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Bag — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 fw-bold mb-4">Your Shopping Bag ({{ cart.total_items }})</h1>
+
+    {% if cart.items %}
+    <div class="row g-5">
+        <!-- Cart Items List -->
+        <div class="col-lg-8">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light small text-uppercase letter-spacing-1">
+                        <tr>
+                            <th>Garment</th>
+                            <th>Attributes</th>
+                            <th>Unit Price</th>
+                            <th style="width: 140px;">Quantity</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="{{ item.variant.product.primary_image_url }}" alt="{{ item.variant.product.name }}" class="rounded" style="width: 65px; height: 85px; object-fit: cover;">
+                                    <div>
+                                        <a href="{{ url_for('products.product_detail', identifier=item.variant.product.slug) }}" class="text-decoration-none text-dark fw-semibold small d-block">
+                                            {{ item.variant.product.name }}
+                                        </a>
+                                        <span class="text-muted small">SKU: {{ item.variant.sku }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div>Size: <span class="fw-bold">{{ item.variant.size }}</span></div>
+                                    <div>Color: <span class="text-muted">{{ item.variant.color }}</span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="small fw-semibold">{{ item.current_unit_price | currency }}</span>
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm" style="width: 110px;">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="updateCartItem({{ item.variant_id }}, {{ item.quantity - 1 }})">-</button>
+                                    <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="updateCartItem({{ item.variant_id }}, {{ item.quantity + 1 }})" {% if item.quantity >= item.variant.stock_quantity %}disabled{% endif %}>+</button>
+                                </div>
+                                {% if item.quantity >= item.variant.stock_quantity %}
+                                    <span class="text-danger small" style="font-size: 0.7rem;">Max available</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ item.line_total | currency }}</span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-link text-danger p-0" onclick="removeCartItem({{ item.variant_id }})" title="Remove item">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <a href="{{ url_for('products.shop') }}" class="btn btn-outline-dark btn-sm text-uppercase letter-spacing-1">
+                    <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+                </a>
+                <form action="{{ url_for('cart.clear_cart') }}" method="POST" onsubmit="return confirm('Clear your entire shopping bag?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-link text-muted btn-sm text-decoration-none">
+                        <i class="bi bi-x-circle me-1"></i> Clear Bag
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 bg-light p-4 rounded shadow-sm">
+                <h5 class="fw-bold mb-3 text-uppercase letter-spacing-1 fs-6">Order Summary</h5>
+
+                <!-- Coupon Form -->
+                <form action="{{ url_for('cart.apply_coupon') }}" method="POST" class="mb-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="form-label small text-muted text-uppercase">Promo Code</label>
+                    <div class="input-group">
+                        <input type="text" name="code" class="form-control text-uppercase" placeholder="e.g. WELCOME10" value="{{ applied_coupon.code if applied_coupon else '' }}">
+                        <button class="btn btn-dark" type="submit">Apply</button>
+                    </div>
+                </form>
+
+                {% if applied_coupon %}
+                <div class="alert alert-success d-flex justify-content-between align-items-center p-2 mb-3 small">
+                    <div>
+                        <i class="bi bi-tag-fill me-1"></i> <strong>{{ applied_coupon.code }}</strong> applied!
+                    </div>
+                    <form action="{{ url_for('cart.remove_coupon') }}" method="POST" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none small">&times; Remove</button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="d-flex flex-column gap-2 border-top pt-3 pb-3">
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Subtotal</span>
+                        <span>{{ subtotal | currency }}</span>
+                    </div>
+
+                    {% if discount_amount > 0 %}
+                    <div class="d-flex justify-content-between small text-success">
+                        <span>Discount ({{ applied_coupon.code }})</span>
+                        <span>-{{ discount_amount | currency }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Estimated Shipping</span>
+                        <span>{% if shipping_fee == 0 %}FREE{% else %}{{ shipping_fee | currency }}{% endif %}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Estimated Tax (5% GST)</span>
+                        <span>{{ tax_amount | currency }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between border-top pt-3 mb-4">
+                    <span class="fw-bold">Total</span>
+                    <span class="fs-4 fw-bold text-dark">{{ final_total | currency }}</span>
+                </div>
+
+                <a href="{{ url_for('checkout.checkout') }}" class="btn btn-dark w-100 py-3 text-uppercase letter-spacing-1 fw-bold">
+                    Proceed to Checkout <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+
+                <div class="text-center mt-3 small text-muted">
+                    <i class="bi bi-lock-fill me-1"></i> 256-bit SSL encrypted checkout
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty Cart -->
+    <div class="text-center py-5 my-5">
+        <i class="bi bi-bag-x fs-1 text-muted d-block mb-3"></i>
+        <h2 class="h4 fw-bold">Your shopping bag is empty</h2>
+        <p class="text-muted small mb-4">Explore our signature garments and add timeless essentials to your wardrobe.</p>
+        <a href="{{ url_for('products.shop') }}" class="btn btn-dark px-4 py-2 text-uppercase letter-spacing-1 fw-bold">
+            Explore Collection
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}

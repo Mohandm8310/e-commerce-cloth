@@ -1,0 +1,55 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Administrator Audit Logs — StyleSphere Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Administrative Audit Logs</h1>
+        <p class="text-muted small mb-0">Immutable record of all management, catalog alterations, and status transitions.</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0 small">
+            <thead class="table-light text-uppercase letter-spacing-1">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Staff / Admin</th>
+                    <th>Action</th>
+                    <th>Entity Type & ID</th>
+                    <th>Details Payload</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="text-muted text-nowrap">{{ log.created_at | date_format('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <strong class="text-dark">{{ log.user.display_name }}</strong>
+                        <div class="text-muted" style="font-size: 0.72rem;">{{ log.user.email }}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-dark">{{ log.action }}</span>
+                    </td>
+                    <td>
+                        <span class="text-dark fw-semibold">{{ log.entity_type }}</span>
+                        {% if log.entity_id %}<code>#{{ log.entity_id }}</code>{% endif %}
+                    </td>
+                    <td>
+                        <pre class="mb-0 bg-light p-2 rounded text-truncate" style="max-width: 350px; font-size: 0.72rem;">{{ log.details_json | tojson }}</pre>
+                    </td>
+                    <td><code>{{ log.ip_address or 'Internal' }}</code></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">No audit logs recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

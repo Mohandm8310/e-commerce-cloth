@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Order #{{ order.order_number }} — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('products.home') }}" class="text-muted text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('customer.orders') }}" class="text-muted text-decoration-none">My Orders</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Track #{{ order.order_number }}</li>
+        </ol>
+    </nav>
+
+    <div class="card border p-4 p-md-5 rounded shadow-sm bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 border-bottom mb-4 gap-2">
+            <div>
+                <span class="text-muted small text-uppercase letter-spacing-1">Order Tracking</span>
+                <h1 class="h3 fw-bold mb-1">Order #{{ order.order_number }}</h1>
+                <div class="text-muted small">Placed on {{ order.created_at | date_format('%b %d, %Y, %I:%M %p') }}</div>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-{{ order.status_badge_class }} text-uppercase px-3 py-2 fs-6">
+                    {{ order.fulfillment_status.replace('_', ' ') }}
+                </span>
+            </div>
+        </div>
+
+        <!-- 5-Stage Visual Stepper -->
+        <div class="tracking-stepper d-none d-md-flex">
+            {% for stage in stages %}
+            <div class="step-node {% if stage.completed %}completed{% endif %}">
+                <div class="step-circle shadow-sm">
+                    {% if stage.completed %}
+                        <i class="bi bi-check-lg fs-5"></i>
+                    {% else %}
+                        {{ loop.index }}
+                    {% endif %}
+                </div>
+                <div class="fw-bold small text-dark">{{ stage.name }}</div>
+                <div class="text-muted" style="font-size: 0.72rem;">{{ stage.desc }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Mobile Stepper (Vertical) -->
+        <div class="d-md-none d-flex flex-column gap-3 mb-4">
+            {% for stage in stages %}
+            <div class="d-flex align-items-start gap-3">
+                <div class="step-circle m-0 {% if stage.completed %}bg-dark text-white{% else %}bg-light text-muted{% endif %}" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                    {% if stage.completed %}&check;{% else %}{{ loop.index }}{% endif %}
+                </div>
+                <div>
+                    <div class="fw-bold small {% if stage.completed %}text-dark{% else %}text-muted{% endif %}">{{ stage.name }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">{{ stage.desc }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Carrier & Logistics Info -->
+        <div class="row g-4 p-3 bg-light rounded mt-3">
+            <div class="col-md-4">
+                <span class="text-muted small text-uppercase">Courier Carrier</span>
+                <div class="fw-bold text-dark">{{ order.carrier or 'StyleSphere Priority Logistics' }}</div>
+            </div>
+            <div class="col-md-4">
+                <span class="text-muted small text-uppercase">AWB Tracking Number</span>
+                <div class="fw-bold text-dark">{{ order.tracking_number or 'Assigned upon dispatch' }}</div>
+            </div>
+            <div class="col-md-4">
+                <span class="text-muted small text-uppercase">Estimated Delivery</span>
+                <div class="fw-bold text-dark">Within 3–5 Business Days</div>
+            </div>
+        </div>
+
+        <!-- Shipping Destination Snapshot -->
+        <div class="mt-4 pt-3 border-top">
+            <h5 class="fw-bold fs-6 mb-2">Delivery Destination</h5>
+            {% if order.shipping_address_snapshot %}
+            <p class="small text-muted mb-0">
+                <strong>{{ order.shipping_address_snapshot.get('full_name') }}</strong><br>
+                {{ order.shipping_address_snapshot.get('street_address') }}<br>
+                {{ order.shipping_address_snapshot.get('city') }}, {{ order.shipping_address_snapshot.get('state') }} - {{ order.shipping_address_snapshot.get('postal_code') }}<br>
+                Mobile: {{ order.shipping_address_snapshot.get('mobile_number') }}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

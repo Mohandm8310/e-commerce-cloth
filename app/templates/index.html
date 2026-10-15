@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}StyleSphere — Luxury & Contemporary Fashion{% endblock %}
+
+{% block content %}
+<!-- Fashion Hero Banner -->
+<section class="hero-fashion">
+    <div class="container">
+        <div class="col-lg-7 col-md-10">
+            <span class="badge bg-white text-dark px-3 py-2 text-uppercase letter-spacing-2 fw-semibold mb-3">Autumn / Winter 2026 Collection</span>
+            <h1 class="hero-title text-white mb-4">Sculpted<br>Elegance.</h1>
+            <p class="fs-5 text-white-50 mb-4 pe-lg-5">
+                Discover bespoke tailoring, ethereal silk slips, and architectural silhouettes engineered for modern living.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{{ url_for('products.shop_women') }}" class="btn btn-light btn-lg px-4 text-uppercase letter-spacing-1 fw-bold">Shop Women</a>
+                <a href="{{ url_for('products.shop_men') }}" class="btn btn-outline-light btn-lg px-4 text-uppercase letter-spacing-1 fw-bold">Shop Men</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Value Pillars -->
+<section class="py-4 border-bottom bg-light">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-truck fs-3 text-dark"></i>
+                    <div class="text-start">
+                        <div class="fw-bold small text-uppercase">Complimentary Shipping</div>
+                        <div class="text-muted small">On all orders above ₹999</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-shield-lock fs-3 text-dark"></i>
+                    <div class="text-start">
+                        <div class="fw-bold small text-uppercase">Secure Razorpay</div>
+                        <div class="text-muted small">UPI, Cards & Netbanking</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-arrow-counterclockwise fs-3 text-dark"></i>
+                    <div class="text-start">
+                        <div class="fw-bold small text-uppercase">15-Day Return Window</div>
+                        <div class="text-muted small">Doorstep pick-up & refund</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-gem fs-3 text-dark"></i>
+                    <div class="text-start">
+                        <div class="fw-bold small text-uppercase">Atelier Craftsmanship</div>
+                        <div class="text-muted small">Sustainably sourced fabrics</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Collections -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <span class="text-uppercase small text-muted letter-spacing-1 fw-semibold">Curated Edits</span>
+                <h2 class="h3 fw-bold mb-0">Signature Collections</h2>
+            </div>
+            <a href="{{ url_for('products.shop') }}" class="text-dark text-uppercase small fw-bold text-decoration-none letter-spacing-1">Explore All <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="row g-4">
+            {% for cat in categories %}
+            <div class="col-md-4">
+                <a href="{{ url_for('products.shop', category=cat.slug) }}" class="text-decoration-none">
+                    <div class="category-card">
+                        <img src="{{ cat.image_url }}" alt="{{ cat.name }}">
+                        <div class="category-overlay">
+                            <span class="small text-uppercase text-white-50 letter-spacing-1">Collection</span>
+                            <h3 class="h4 text-white fw-bold mb-1">{{ cat.name }}</h3>
+                            <p class="small text-white-50 mb-0 d-none d-sm-block">{{ cat.description }}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Trending / Featured Products -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-uppercase small text-muted letter-spacing-2 fw-semibold">Most Desired</span>
+            <h2 class="h2 fw-bold">Trending This Season</h2>
+            <div class="mx-auto" style="width: 50px; height: 2px; background-color: var(--primary-black); margin-top: 12px;"></div>
+        </div>
+
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="product-card h-100 d-flex flex-column">
+                    <div class="product-image-wrapper">
+                        <a href="{{ url_for('products.product_detail', identifier=product.slug) }}">
+                            <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" loading="lazy">
+                        </a>
+
+                        <div class="product-badges">
+                            {% if product.discount_percent > 0 %}
+                                <span class="product-discount-badge">{{ product.discount_percent }}% OFF</span>
+                            {% endif %}
+                            {% if product.is_featured %}
+                                <span class="badge bg-dark text-white" style="font-size: 0.7rem;">FEATURED</span>
+                            {% endif %}
+                        </div>
+
+                        <button class="wishlist-btn-overlay btn-wishlist-toggle" data-product-id="{{ product.id }}" title="Save to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+
+                        <a href="{{ url_for('products.product_detail', identifier=product.slug) }}" class="quick-add-btn text-center text-decoration-none">
+                            Select Options
+                        </a>
+                    </div>
+
+                    <div class="pt-3 flex-grow-1 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="text-muted small text-uppercase letter-spacing-1">{{ product.brand }}</span>
+                            <h3 class="product-title mt-1">
+                                <a href="{{ url_for('products.product_detail', identifier=product.slug) }}" class="text-decoration-none text-dark">
+                                    {{ product.name }}
+                                </a>
+                            </h3>
+                        </div>
+                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                            <span class="product-price">{{ product.effective_price | currency }}</span>
+                            {% if product.discount_price and product.discount_price < product.price %}
+                                <span class="product-discount-price">{{ product.price | currency }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Brand Editorial Banner -->
+<section class="py-5 my-4">
+    <div class="container">
+        <div class="bg-dark text-white rounded p-4 p-md-5 position-relative overflow-hidden">
+            <div class="row align-items-center">
+                <div class="col-lg-6 col-md-8 position-relative z-1">
+                    <span class="badge bg-secondary text-white text-uppercase letter-spacing-2 mb-3">Atelier Standards</span>
+                    <h2 class="display-5 fw-bold mb-3">Crafted for Longevity.</h2>
+                    <p class="text-muted fs-5 mb-4">
+                        Each garment in our portfolio is engineered with precise stitch counts, reinforced stress points, and European-milled natural textiles. We reject disposable fashion in favor of timeless elegance.
+                    </p>
+                    <a href="{{ url_for('products.about') }}" class="btn btn-outline-light px-4 py-2 text-uppercase letter-spacing-1 fw-bold">Read Our Philosophy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals Grid -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <span class="text-uppercase small text-muted letter-spacing-1 fw-semibold">Just Landed</span>
+                <h2 class="h3 fw-bold mb-0">New Arrivals</h2>
+            </div>
+            <a href="{{ url_for('products.new_arrivals') }}" class="text-dark text-uppercase small fw-bold text-decoration-none letter-spacing-1">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="row g-4">
+            {% for product in new_arrivals[:4] %}
+            <div class="col-lg-3 col-md-6 col-6">
+                <div class="product-card h-100 d-flex flex-column">
+                    <div class="product-image-wrapper">
+                        <a href="{{ url_for('products.product_detail', identifier=product.slug) }}">
+                            <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" loading="lazy">
+                        </a>
+
+                        <div class="product-badges">
+                            <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">NEW</span>
+                        </div>
+
+                        <button class="wishlist-btn-overlay btn-wishlist-toggle" data-product-id="{{ product.id }}" title="Save to wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                    </div>
+
+                    <div class="pt-3">
+                        <span class="text-muted small text-uppercase letter-spacing-1">{{ product.brand }}</span>
+                        <h3 class="product-title mt-1">
+                            <a href="{{ url_for('products.product_detail', identifier=product.slug) }}" class="text-decoration-none text-dark">
+                                {{ product.name }}
+                            </a>
+                        </h3>
+                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                            <span class="product-price">{{ product.effective_price | currency }}</span>
+                            {% if product.discount_price and product.discount_price < product.price %}
+                                <span class="product-discount-price">{{ product.price | currency }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

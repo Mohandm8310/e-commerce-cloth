@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy — StyleSphere{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+    <h1 class="h2 fw-bold mb-4">Privacy & Data Governance Policy</h1>
+    <p class="text-muted small">Last updated: October 2026</p>
+
+    <div class="text-secondary d-flex flex-column gap-3">
+        <h4 class="h5 fw-bold text-dark mt-3">1. Information We Collect</h4>
+        <p>StyleSphere collects minimal necessary personal information to process fashion orders and provide OTP-based customer authentication. This includes your email address, phone number, shipping coordinates, and transaction references.</p>
+
+        <h4 class="h5 fw-bold text-dark mt-3">2. Cryptographic Security & OTPs</h4>
+        <p>One-time passwords (OTPs) are hashed using salted SHA-256 algorithms and expire strictly within 10 minutes. We never store raw payment credentials, credit card details, or CVV codes; all payments are processed through Razorpay's PCI-DSS compliant infrastructure.</p>
+
+        <h4 class="h5 fw-bold text-dark mt-3">3. Customer Session Analytics</h4>
+        <p>Our administrator analytics monitor active sessions for capacity planning and security auditing. We do not sell, rent, or trade your shopping history or personal identifiers to third-party ad networks.</p>
+
+        <h4 class="h5 fw-bold text-dark mt-3">4. Data Subject Rights</h4>
+        <p>You may request deletion or export of your account profile and addresses at any time by contacting privacy@stylesphere.com.</p>
+    </div>
+</div>
+{% endblock %}
